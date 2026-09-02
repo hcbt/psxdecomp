@@ -1,0 +1,35 @@
+name: MNU.BIN
+sha1: 680b6db41cf6f0ac97ddaf2483a414c4dda1d6ce
+options:
+  basename: mnu
+  target_path: game/MNU.BIN
+  elf_path: build/mnu.elf
+  base_path: ..
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/mnu
+  src_path: src/mnu
+  build_path: build/mnu
+  ld_script_path: build/mnu.ld
+  ld_dependencies: True
+  find_file_boundaries: True
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  ld_bss_is_noload: False
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+  subalign: 4
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+segments:
+  - name: mnu
+    type: code
+    start: 0x0
+    vram: 0x800C1D4C
+    exclusive_ram_id: vram_800c1d4c
+    subsegments:
+      - [0x0, asm, mnu]
+  - [0xD678]

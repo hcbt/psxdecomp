@@ -1,0 +1,49 @@
+{
+  "custom_make": "make",
+  "custom_args": [
+    "objects"
+  ],
+  "build_target": false,
+  "units": [
+    {
+      "name": "eng/eng",
+      "target_path": "build/expected/eng/eng.o",
+      "base_path": "build/src/eng/eng.o"
+    },
+    {
+      "name": "game/game",
+      "target_path": "build/expected/game/game.o",
+      "base_path": "build/src/game/game.o"
+    },
+    {
+      "name": "mnu/mnu",
+      "target_path": "build/expected/mnu/mnu.o",
+      "base_path": "build/src/mnu/mnu.o"
+    },
+    {
+      "name": "mplr/mplr",
+      "target_path": "build/expected/mplr/mplr.o",
+      "base_path": "build/src/mplr/mplr.o"
+    },
+    {
+      "name": "rot/rot",
+      "target_path": "build/expected/rot/rot.o",
+      "base_path": "build/src/rot/rot.o"
+    },
+    {
+      "name": "slus_008_69/main",
+      "target_path": "build/expected/slus_008_69/main.o",
+      "base_path": "build/src/slus_008_69/main.o"
+    },
+    {
+      "name": "sys/sys",
+      "target_path": "build/expected/sys/sys.o",
+      "base_path": "build/src/sys/sys.o"
+    },
+    {
+      "name": "tuto/tuto",
+      "target_path": "build/expected/tuto/tuto.o",
+      "base_path": "build/src/tuto/tuto.o"
+    }
+  ]
+}

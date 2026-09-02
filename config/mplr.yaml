@@ -1,0 +1,35 @@
+name: MPLR.BIN
+sha1: bc822c968a16e3ca849cea3e62031794d6578892
+options:
+  basename: mplr
+  target_path: game/MPLR.BIN
+  elf_path: build/mplr.elf
+  base_path: ..
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/mplr
+  src_path: src/mplr
+  build_path: build/mplr
+  ld_script_path: build/mplr.ld
+  ld_dependencies: True
+  find_file_boundaries: True
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  ld_bss_is_noload: False
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+  subalign: 4
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+segments:
+  - name: mplr
+    type: code
+    start: 0x0
+    vram: 0x800C1D4C
+    exclusive_ram_id: vram_800c1d4c
+    subsegments:
+      - [0x0, asm, mplr]
+  - [0xEB4]

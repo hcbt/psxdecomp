@@ -25,3 +25,16 @@ __pycache__/
 
 # User-supplied Psy-Q SDK (headers + libs)
 /tools/psyq/
+
+# splat / matching build products
+/asm/
+/assets/
+/build/
+.splache
+undefined_funcs_auto.txt
+undefined_syms_auto.txt
+/*.d
+/include/macro.inc
+/include/labels.inc
+/include/gte_macros.inc
+/include/include_asm.h

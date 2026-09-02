@@ -310,12 +310,18 @@ in
   };
 
   scripts.ghidra-open.exec = launch;
+  scripts.splat-split.exec = "bash tools/split.sh";
+  scripts.ghidra-import-overlays.exec = "python3 tools/ghidra_import_overlays.py";
+  scripts.objects.exec = "python3 tools/make_objects.py";
+  scripts.objdiff-config.exec = "python3 tools/make_objdiff.py";
 
   enterTest = ''
     command -v ghidra
     command -v ghidra-analyzeHeadless
     command -v apm || command -v apm-cli
     command -v ghidra-open
+    command -v splat-split
+    command -v ghidra-import-overlays
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
       | grep -q ghidra_psx_ldr
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \

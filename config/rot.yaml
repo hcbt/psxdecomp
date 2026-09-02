@@ -1,0 +1,35 @@
+name: ROT.BIN
+sha1: 03d5c2a660b357028e89f1d4ad71b456ea0193ca
+options:
+  basename: rot
+  target_path: game/ROT.BIN
+  elf_path: build/rot.elf
+  base_path: ..
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/rot
+  src_path: src/rot
+  build_path: build/rot
+  ld_script_path: build/rot.ld
+  ld_dependencies: True
+  find_file_boundaries: True
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  ld_bss_is_noload: False
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+  subalign: 4
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+segments:
+  - name: rot
+    type: code
+    start: 0x0
+    vram: 0x800C1D4C
+    exclusive_ram_id: vram_800c1d4c
+    subsegments:
+      - [0x0, asm, rot]
+  - [0xBD40]
