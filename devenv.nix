@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 let
   ghidraPsxLdr = pkgs.ghidra.buildGhidraExtension {
@@ -63,6 +63,163 @@ let
     ghidraMcp
   ]);
 
+  maspsxSrc = pkgs.fetchFromGitHub {
+    owner = "mkst";
+    repo = "maspsx";
+    rev = "746b895f02929ecd148af7b1f4ff05b69f973878";
+    hash = "sha256-B6p/V7zha3hurGjcOfAmbCcmUECj+uB6+O8rMmOEmUY=";
+  };
+
+  maspsx = pkgs.writeShellApplication {
+    name = "maspsx";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''
+      exec python3 ${maspsxSrc}/maspsx.py "$@"
+    '';
+  };
+
+  mkOldGcc =
+    {
+      version,
+      url,
+      hash,
+    }:
+    pkgs.stdenvNoCC.mkDerivation {
+      pname = "gcc-${version}-psx";
+      inherit version;
+      src = pkgs.fetchurl { inherit url hash; };
+      sourceRoot = ".";
+      installPhase = ''
+        runHook preInstall
+        mkdir -p "$out/lib/gcc-${version}-psx" "$out/bin"
+        cc1=$(find . -type f -name cc1 | head -n1)
+        if [ -z "$cc1" ]; then
+          echo "no cc1 in gcc-${version}-psx tarball" >&2
+          find . -type f >&2
+          exit 1
+        fi
+        cp -a "$(dirname "$cc1")/." "$out/lib/gcc-${version}-psx/"
+        chmod +x "$out/lib/gcc-${version}-psx"/* || true
+        for b in cc1 cpp gcc cc1plus g++; do
+          if [ -e "$out/lib/gcc-${version}-psx/$b" ]; then
+            ln -s "$out/lib/gcc-${version}-psx/$b" "$out/bin/$b-${version}-psx"
+          fi
+        done
+        runHook postInstall
+      '';
+      meta = {
+        description = "decompals GCC ${version} targeting mips-sony-psx";
+        homepage = "https://github.com/decompals/old-gcc";
+      };
+    };
+
+  oldGccSpecs =
+    let
+      darwin = pkgs.stdenv.hostPlatform.isDarwin;
+      base = "https://github.com/decompals/old-gcc/releases/download/0.17";
+    in
+    [
+      {
+        version = "2.7.2";
+        url =
+          if darwin then "${base}/gcc-2.7.2-psx-macos.tar.gz" else "${base}/gcc-2.7.2-psx.tar.gz";
+        hash =
+          if darwin then
+            "sha256-QoCJRmHJeSvBn1yXDCg9NTgZN/tE5HmpHQwETJX80gg="
+          else
+            "sha256-UApFmzSF6IWo0wLKwjwqRjLzkA4DoJFT9hkGmf1yNXE=";
+      }
+      {
+        version = "2.8.1";
+        url =
+          if darwin then "${base}/gcc-2.8.1-psx-macos.tar.gz" else "${base}/gcc-2.8.1-psx.tar.gz";
+        hash =
+          if darwin then
+            "sha256-urDG6h85RXPVqrvdezfjas7rg8UiFB2Uaoep9YwZnqA="
+          else
+            "sha256-9vbog5QtTTKJ0EgjbGcuce1BDlRqquj/ZVlS8VZ+G+A=";
+      }
+    ]
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+      # No native macOS build of 2.8.0-psx in old-gcc 0.17.
+      {
+        version = "2.8.0";
+        url = "${base}/gcc-2.8.0-psx.tar.gz";
+        hash = "sha256-GjyVb+iupevbJRdJ2V3iyE8CNTBYTXvWY3RLXsJAULc=";
+      }
+    ];
+
+  oldGccs = map mkOldGcc oldGccSpecs;
+
+  objdiffCli =
+    let
+      system = pkgs.stdenv.hostPlatform.system;
+      assets = {
+        aarch64-darwin = {
+          name = "objdiff-cli-macos-arm64";
+          hash = "sha256-mPgnXCeQDE/iJI/OOvN2F2WL5JZI+n27WzdjcfBG39s=";
+        };
+        x86_64-darwin = {
+          name = "objdiff-cli-macos-x86_64";
+          hash = "sha256-E+JTXCUrjsttuna1qu8LwDxuNkYMc5/lrDWvFtiYUB4=";
+        };
+        x86_64-linux = {
+          name = "objdiff-cli-linux-x86_64";
+          hash = "sha256-yCkCgeghFLzBoG/3MGERDTkCoXeCLnUDN94lNxiONY8=";
+        };
+        aarch64-linux = {
+          name = "objdiff-cli-linux-aarch64";
+          hash = "sha256-qE3AXeZeuYHJfKhYkLvyz44d74pM4GIUTsxNDWhqmTo=";
+        };
+      };
+      asset =
+        assets.${system} or (throw "objdiff-cli: no upstream binary for ${system}");
+    in
+    pkgs.stdenvNoCC.mkDerivation {
+      pname = "objdiff-cli";
+      version = "3.8.1";
+      src = pkgs.fetchurl {
+        url = "https://github.com/encounter/objdiff/releases/download/v3.8.1/${asset.name}";
+        inherit (asset) hash;
+      };
+      dontUnpack = true;
+      nativeBuildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+        pkgs.autoPatchelfHook
+      ];
+      installPhase = ''
+        runHook preInstall
+        mkdir -p $out/bin
+        install -m755 $src $out/bin/objdiff-cli
+        runHook postInstall
+      '';
+      meta = {
+        description = "Object-file differ for matching decompilation";
+        homepage = "https://github.com/encounter/objdiff";
+      };
+    };
+
+  # Cross GNU as/ld targeting mipsel, no libc. pkgsCross.mipsel-linux-gnu
+  # pulls glibc and fails to eval on Darwin.
+  mipsBinutils = pkgs.stdenv.mkDerivation {
+    pname = "mipsel-linux-gnu-binutils";
+    inherit (pkgs.binutils-unwrapped) version src;
+    nativeBuildInputs = [
+      pkgs.bison
+      pkgs.flex
+      pkgs.texinfo
+    ];
+    configureFlags = [
+      "--target=mipsel-linux-gnu"
+      "--program-prefix=mipsel-linux-gnu-"
+      "--disable-nls"
+      "--disable-werror"
+      "--disable-gprofng"
+      "--enable-deterministic-archives"
+    ];
+    enableParallelBuilding = true;
+    doCheck = false;
+  };
+
   # Import SLUS_008.69 if needed, then open Ghidra + CodeBrowser. GhidraMCP
   # starts on the project window (http://127.0.0.1:8080/mcp).
   launch = ''
@@ -108,10 +265,24 @@ in
   packages = [
     pkgs.git
     pkgs.apm-cli
+    pkgs.ninja
+    pkgs.gnumake
     ghidra
-  ];
+    maspsx
+    objdiffCli
+    mipsBinutils
+  ]
+  ++ oldGccs;
 
   env.GHIDRA_INSTALL_DIR = "${ghidra}/lib/ghidra";
+
+  languages.python = {
+    enable = true;
+    venv.enable = true;
+    uv.enable = true;
+    uv.sync.enable = true;
+    uv.sync.arguments = [ "--frozen" ];
+  };
 
   scripts.buddies.exec = launch;
 
@@ -127,5 +298,20 @@ in
     sla="$GHIDRA_INSTALL_DIR/Ghidra/Extensions/ghidra_psx_ldr/data/languages/mips32le.sla"
     test -f "$sla"
     test "$(head -c 3 "$sla")" = sla
+
+    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as cc1-2.8.1-psx cc1-2.7.2-psx; do
+      path="$(command -v "$tool")"
+      case "$path" in
+        /nix/store/*|*/.devenv/*|"$DEVENV_STATE"/venv/bin/*) echo "  ok $tool -> $path" ;;
+        *) echo "  FAIL: $tool resolves to $path" >&2; exit 1 ;;
+      esac
+    done
+
+    splat --help >/dev/null
+    maspsx --help >/dev/null
+    objdiff-cli --help >/dev/null
+    mipsel-linux-gnu-as --version >/dev/null
+    cc1_out="$(cc1-2.8.1-psx -version </dev/null 2>&1 || true)"
+    echo "$cc1_out" | grep -q "GNU C version 2.8.1"
   '';
 }

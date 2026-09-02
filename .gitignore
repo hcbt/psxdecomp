@@ -17,3 +17,11 @@ devenv.local.yaml
 
 # APM package cache
 apm_modules/
+
+# uv / Python
+.venv/
+__pycache__/
+*.pyc
+
+# User-supplied Psy-Q SDK (headers + libs)
+/tools/psyq/

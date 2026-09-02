@@ -8,6 +8,8 @@ Do not use host Python, Node, bun, or other host toolchains. Do not add a `.envr
 
 `devenv shell -- buddies` imports `game/SLUS_008.69` if needed, opens it in Ghidra, and starts the Ghidra MCP at `http://127.0.0.1:8080/mcp`.
 
+Python is devenv `languages.python` with uv (`uv.sync` from `pyproject.toml` / `uv.lock`). splat comes from that venv. Native matching tools (maspsx, old gcc 2.7.2/2.8.1-psx, mipsel binutils, objdiff-cli, ninja) are devenv packages. Do not use host Python. Psy-Q headers/libs belong in gitignored `tools/psyq/`.
+
 ## APM
 
 Agent skills and other agent primitives are declared in `apm.yml` and installed with `devenv shell -- apm install` (or `apm-cli` if that is the binary). Commit `apm.yml` (and `apm.lock.yaml` when APM writes one). Do not copy skills into the tree by hand.

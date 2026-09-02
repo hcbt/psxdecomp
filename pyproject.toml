@@ -1,0 +1,11 @@
+[project]
+name = "buddies"
+version = "0.0.0"
+description = "Team Buddies PSX matching decompilation"
+requires-python = ">=3.11"
+dependencies = [
+    "splat64[mips]>=0.50.0,<1.0.0",
+]
+
+[tool.uv]
+package = false
