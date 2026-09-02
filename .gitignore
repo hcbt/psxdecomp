@@ -12,7 +12,7 @@ devenv.local.yaml
 # User-supplied disc dump
 /game/
 
-# Ghidra project (created by `buddies`)
+# Ghidra project (created by `ghidra-open`)
 /ghidra-project/
 
 # APM package cache
