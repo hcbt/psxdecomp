@@ -22,8 +22,8 @@ def relativize_include_asm() -> None:
         return
     text = INCLUDE_ASM.read_text()
     abs_inc = (ROOT / "include").resolve().as_posix()
-    new = text.replace(f'"{abs_inc}/macro.inc"', '"macro.inc"').replace(
-        f'"{abs_inc}/labels.inc"', '"labels.inc"'
+    new = text.replace(f"{abs_inc}/macro.inc", "macro.inc").replace(
+        f"{abs_inc}/labels.inc", "labels.inc"
     )
     if new != text:
         INCLUDE_ASM.write_text(new)
