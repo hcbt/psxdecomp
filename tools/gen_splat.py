@@ -60,9 +60,11 @@ options:
   section_order: [".rodata", ".text", ".data", ".bss"]
   ld_bss_is_noload: False
   symbol_addrs_path:
-    - symbol_addrs.txt
+    - config/symbol_addrs.txt
   reloc_addrs_path:
-    - reloc_addrs.txt
+    - config/reloc_addrs.txt
+  undefined_funcs_auto_path: config/undefined_funcs_auto.txt
+  undefined_syms_auto_path: config/undefined_syms_auto.txt
   subalign: 4
   string_encoding: ASCII
   data_string_encoding: ASCII
@@ -111,8 +113,16 @@ def write_overlay(ov, ram_id: str | None) -> Path:
     return path
 
 
-def main() -> None:
+def ensure_addr_files() -> None:
     CONFIG.mkdir(exist_ok=True)
+    for name in ("symbol_addrs.txt", "reloc_addrs.txt"):
+        path = CONFIG / name
+        if not path.exists():
+            path.write_text("")
+
+
+def main() -> None:
+    ensure_addr_files()
     exe = boot_exe()
     written = [write_exe(exe)]
     overlays = parse(GAME / "OVERLAY.DAT", GAME)

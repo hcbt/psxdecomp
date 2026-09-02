@@ -40,6 +40,8 @@ __pycache__/
 .splache
 undefined_funcs_auto.txt
 undefined_syms_auto.txt
+/config/undefined_funcs_auto.txt
+/config/undefined_syms_auto.txt
 /*.d
 /include/macro.inc
 /include/labels.inc

@@ -80,7 +80,7 @@ def link_one(script: Path) -> dict:
     elf = BUILD / f"{stem}.elf"
     extra = []
     for name in ("undefined_syms_auto.txt", "undefined_funcs_auto.txt"):
-        path = ROOT / name
+        path = CONFIG / name
         if path.is_file() and path.stat().st_size:
             extra += ["-T", str(path)]
     subprocess.run(

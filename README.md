@@ -13,7 +13,7 @@ imports:
   - psxdecomp
 ```
 
-The importing project is `DEVENV_ROOT`. Put the disc dump in `game/`, matching C in `src/`, and `report.json` at the repo root. Psy-Q 4.7 headers are in `tools/psyq/include`.
+The importing project is `DEVENV_ROOT`. Put the disc dump in `game/`, matching C in `src/`, splat yamls and address lists in `config/`, and `report.json` at the repo root. Psy-Q 4.7 headers are in `tools/psyq/include`.
 
 ```
 devenv allow
