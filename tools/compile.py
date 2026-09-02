@@ -48,6 +48,8 @@ def compile_c(src: Path, src_root: Path = SRC) -> Path:
             "--run-assembler",
             f"--gnu-as-path={AS}",
             *ASFLAGS,
+            "-I",
+            str(ROOT / "include"),
             "-o",
             str(dest),
             str(asm),
