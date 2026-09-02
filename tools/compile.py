@@ -14,7 +14,17 @@ from compiler import ASPSX_VER, AS, ASFLAGS, CC1, CFLAGS, CPP, MASPSX, project_r
 ROOT = project_root()
 SRC = ROOT / "src"
 OUT = ROOT / "build" / "src"
-PSYQ_INC = ROOT / "tools" / "psyq" / "include"
+TOOLKIT_DIR = Path(__file__).resolve().parent
+
+
+def psyq_include() -> Path | None:
+    for candidate in (
+        ROOT / "tools" / "psyq" / "include",
+        TOOLKIT_DIR / "psyq" / "include",
+    ):
+        if candidate.is_dir():
+            return candidate
+    return None
 
 
 def compile_c(src: Path, src_root: Path = SRC) -> Path:
@@ -23,8 +33,9 @@ def compile_c(src: Path, src_root: Path = SRC) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     asm = dest.with_suffix(".s")
     cpp_cmd = [CPP, "-P"]
-    if PSYQ_INC.is_dir():
-        cpp_cmd += ["-I", str(PSYQ_INC)]
+    inc = psyq_include()
+    if inc is not None:
+        cpp_cmd += ["-I", str(inc)]
     cpp_cmd.append(str(src))
     preprocessed = subprocess.run(cpp_cmd, check=True, capture_output=True)
     i_file = dest.with_suffix(".i")

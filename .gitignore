@@ -23,8 +23,8 @@ apm_modules/
 __pycache__/
 *.pyc
 
-# User-supplied Psy-Q SDK (headers + libs)
-/tools/psyq/
+# Converted Psy-Q libs (headers are committed)
+/tools/psyq/lib/
 
 # Generated if this toolkit is used as a standalone work tree
 /config/
