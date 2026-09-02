@@ -11,4 +11,7 @@ CFLAGS = ["-O2", "-G0", "-fno-schedule-insns"]
 AS = "mipsel-linux-gnu-as"
 # r4000 so splat `tge` is accepted (ASPSX emits it on R3000 too).
 ASFLAGS = ["-EL", "-march=r4000", "-no-pad-sections"]
+LD = "mipsel-linux-gnu-ld"
+LDFLAGS = ["-EL"]
+OBJCOPY = "mipsel-linux-gnu-objcopy"
 MASPSX = "maspsx"

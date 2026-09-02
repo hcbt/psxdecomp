@@ -317,6 +317,8 @@ in
   scripts.objects.exec = "python3 tools/make_objects.py";
   scripts.objdiff-config.exec = "python3 tools/make_objdiff.py";
   scripts.compile.exec = "python3 tools/compile.py";
+  scripts.report.exec = "python3 tools/report.py";
+  scripts.link.exec = "python3 tools/link.py";
 
   enterTest = ''
     command -v ghidra
@@ -326,6 +328,8 @@ in
     command -v splat-split
     command -v ghidra-import-overlays
     command -v compile
+    command -v report
+    command -v link
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
       | grep -q ghidra_psx_ldr
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
@@ -336,7 +340,7 @@ in
 
     command -v clang
     command -v clang++
-    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as cc1-2.8.1-psx cc1-2.7.2-psx clang clang++; do
+    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as mipsel-linux-gnu-ld cc1-2.8.1-psx cc1-2.7.2-psx clang clang++; do
       path="$(command -v "$tool")"
       case "$path" in
         /nix/store/*|*/.devenv/*|"$DEVENV_STATE"/venv/bin/*) echo "  ok $tool -> $path" ;;
@@ -348,6 +352,7 @@ in
     maspsx --help >/dev/null
     objdiff-cli --help >/dev/null
     mipsel-linux-gnu-as --version >/dev/null
+    mipsel-linux-gnu-ld --version >/dev/null
     cc1_out="$(cc1-2.8.1-psx -version </dev/null 2>&1 || true)"
     echo "$cc1_out" | grep -q "GNU C version 2.8.1"
   '';

@@ -29,6 +29,7 @@ __pycache__/
 # splat yaml + objdiff units (generated from the disc; do not commit)
 /config/
 /objdiff.json
+/report.json
 
 # Matching C and handwritten expected asm (work products; not this repo)
 /src/

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -16,8 +17,8 @@ OUT = ROOT / "build" / "src"
 PSYQ_INC = ROOT / "tools" / "psyq" / "include"
 
 
-def compile_c(src: Path) -> Path:
-    rel = src.relative_to(SRC) if src.is_relative_to(SRC) else Path(src.name)
+def compile_c(src: Path, src_root: Path = SRC) -> Path:
+    rel = src.relative_to(src_root) if src.is_relative_to(src_root) else Path(src.name)
     dest = OUT / rel.with_suffix(".o")
     dest.parent.mkdir(parents=True, exist_ok=True)
     asm = dest.with_suffix(".s")
@@ -47,13 +48,18 @@ def compile_c(src: Path) -> Path:
 
 
 def main() -> None:
-    files = [Path(a) for a in sys.argv[1:]]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--src", type=Path, default=SRC, help="root of matching C")
+    parser.add_argument("files", nargs="*", type=Path)
+    args = parser.parse_args()
+    src_root = args.src.resolve()
+    files = [p.resolve() for p in args.files]
     if not files:
-        files = sorted(SRC.rglob("*.c")) if SRC.is_dir() else []
+        files = sorted(src_root.rglob("*.c")) if src_root.is_dir() else []
     if not files:
         raise SystemExit("no .c files (pass paths or put them under src/)")
     for src in files:
-        compile_c(src.resolve())
+        compile_c(src, src_root=src_root)
 
 
 if __name__ == "__main__":
