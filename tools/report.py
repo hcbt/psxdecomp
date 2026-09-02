@@ -63,7 +63,8 @@ def map_compiled(objs: list[Path], funcs) -> int:
     return n
 
 
-def generate_report() -> dict:
+def generate_report(dest: Path) -> dict:
+    dest.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
             "objdiff-cli",
@@ -72,7 +73,7 @@ def generate_report() -> dict:
             "-p",
             str(ROOT),
             "-o",
-            str(REPORT),
+            str(dest),
             "-f",
             "json",
             "-c",
@@ -80,7 +81,11 @@ def generate_report() -> dict:
         ],
         check=True,
     )
-    return json.loads(REPORT.read_text())
+    text = dest.read_text()
+    if "/Users/" in text or "/home/" in text:
+        dest.unlink()
+        raise SystemExit(f"refusing to write {dest}: report contains a local path")
+    return json.loads(text)
 
 
 def measures(report: dict) -> dict:
@@ -121,12 +126,20 @@ def main() -> None:
         help="root of matching C (gitignored src/ by default)",
     )
     parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=REPORT,
+        help="objdiff report.json (put this in the decomp repo)",
+    )
+    parser.add_argument(
         "--skip-link",
         action="store_true",
         help="do not sha1-link splat objects against originals",
     )
     args = parser.parse_args()
     src_root = args.src.resolve()
+    dest = args.output.expanduser().resolve()
 
     make_objects.main()
     funcs = parse_all()
@@ -136,7 +149,7 @@ def main() -> None:
     mapped = map_compiled(compiled, funcs)
     print(f"compiled {len(compiled)} C files, mapped {mapped} to splat names")
     make_objdiff.main()
-    report = generate_report()
+    report = generate_report(dest)
     m = measures(report)
     total = int(m.get("total_code") or 0)
     matched = int(m.get("matched_code") or 0)
@@ -150,7 +163,10 @@ def main() -> None:
         "functions:     "
         f"{int(m.get('matched_functions') or 0)} / {int(m.get('total_functions') or 0)}"
     )
-    print(f"wrote {REPORT.relative_to(ROOT)}")
+    try:
+        print(f"wrote {dest.relative_to(ROOT)}")
+    except ValueError:
+        print(f"wrote {dest}")
 
     if not args.skip_link:
         import link as link_mod
