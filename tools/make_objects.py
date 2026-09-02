@@ -12,25 +12,31 @@ from compiler import AS, ASFLAGS
 
 ROOT = Path(__file__).resolve().parents[1]
 ASM = ROOT / "asm"
+HANDWRITTEN = ROOT / "expected"
 OUT = ROOT / "build" / "expected"
 
 
+def assemble(src: Path, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [AS, *ASFLAGS, "-I", str(ROOT / "include"), "-o", str(dest), str(src)]
+    print(" ".join(cmd))
+    subprocess.run(cmd, check=True)
+
+
 def main() -> None:
-    if not ASM.is_dir():
-        raise SystemExit("no asm/; run splat-split")
     n = 0
-    for src in ASM.rglob("*.s"):
-        if src.name == "header.s":
-            continue
-        rel = src.relative_to(ASM).with_suffix(".o")
-        dest = OUT / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        cmd = [AS, *ASFLAGS, "-I", str(ROOT / "include"), "-o", str(dest), str(src)]
-        print(" ".join(cmd))
-        subprocess.run(cmd, check=True)
-        n += 1
+    if ASM.is_dir():
+        for src in ASM.rglob("*.s"):
+            if src.name == "header.s":
+                continue
+            assemble(src, OUT / src.relative_to(ASM).with_suffix(".o"))
+            n += 1
+    if HANDWRITTEN.is_dir():
+        for src in HANDWRITTEN.rglob("*.s"):
+            assemble(src, OUT / src.relative_to(HANDWRITTEN).with_suffix(".o"))
+            n += 1
     if n == 0:
-        raise SystemExit("no .s files under asm/")
+        raise SystemExit("no .s files under asm/ or expected/; run splat-split")
     print(f"assembled {n} objects into {OUT.relative_to(ROOT)}")
 
 

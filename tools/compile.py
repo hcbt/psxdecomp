@@ -21,7 +21,7 @@ def compile_c(src: Path) -> Path:
     dest = OUT / rel.with_suffix(".o")
     dest.parent.mkdir(parents=True, exist_ok=True)
     asm = dest.with_suffix(".s")
-    cpp_cmd = [CPP, "-P", *CFLAGS]
+    cpp_cmd = [CPP, "-P"]
     if PSYQ_INC.is_dir():
         cpp_cmd += ["-I", str(PSYQ_INC)]
     cpp_cmd.append(str(src))

@@ -30,6 +30,10 @@ __pycache__/
 /config/
 /objdiff.json
 
+# Matching C and handwritten expected asm (work products; not this repo)
+/src/
+/expected/
+
 # splat / matching build products
 /asm/
 /assets/
