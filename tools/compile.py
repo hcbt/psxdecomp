@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from compiler import ASPSX_VER, AS, ASFLAGS, CC1, CFLAGS, CPP, MASPSX
+from compiler import ASPSX_VER, AS, ASFLAGS, CC1, CFLAGS, CPP, MASPSX, project_root
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project_root()
 SRC = ROOT / "src"
 OUT = ROOT / "build" / "src"
 PSYQ_INC = ROOT / "tools" / "psyq" / "include"

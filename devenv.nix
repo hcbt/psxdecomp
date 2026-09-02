@@ -312,13 +312,13 @@ in
   languages.cplusplus.enable = true;
 
   scripts.ghidra-open.exec = launch;
-  scripts.splat-split.exec = "python3 tools/split.py";
-  scripts.ghidra-import-overlays.exec = "python3 tools/ghidra_import_overlays.py";
-  scripts.objects.exec = "python3 tools/make_objects.py";
-  scripts.objdiff-config.exec = "python3 tools/make_objdiff.py";
-  scripts.compile.exec = "python3 tools/compile.py";
-  scripts.report.exec = "python3 tools/report.py";
-  scripts.link.exec = "python3 tools/link.py";
+  scripts.splat-split.exec = ''python3 ${./tools/split.py} "$@"'';
+  scripts.ghidra-import-overlays.exec = ''python3 ${./tools/ghidra_import_overlays.py} "$@"'';
+  scripts.objects.exec = ''python3 ${./tools/make_objects.py} "$@"'';
+  scripts.objdiff-config.exec = ''python3 ${./tools/make_objdiff.py} "$@"'';
+  scripts.compile.exec = ''python3 ${./tools/compile.py} "$@"'';
+  scripts.report.exec = ''python3 ${./tools/report.py} "$@"'';
+  scripts.link.exec = ''python3 ${./tools/link.py} "$@"'';
 
   enterTest = ''
     command -v ghidra

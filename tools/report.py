@@ -10,16 +10,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from compiler import OBJCOPY
+from compiler import OBJCOPY, project_root
 from splat_functions import extract_and_assemble, normalize_symbol, parse_all
 import compile as compile_mod
 import make_objdiff
 import make_objects
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project_root()
 SRC_DEFAULT = ROOT / "src"
 SRC_FUNCS = ROOT / "build" / "src" / "funcs"
-REPORT = ROOT / "build" / "report.json"
+REPORT = ROOT / "report.json"
 
 
 def compile_src(src_root: Path) -> list[Path]:

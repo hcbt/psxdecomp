@@ -8,9 +8,11 @@ import struct
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).parent))
+from compiler import project_root  # noqa: E402
 from overlay_table import parse  # noqa: E402
+
+ROOT = project_root()
 
 GAME = ROOT / "game"
 CONFIG = ROOT / "config"

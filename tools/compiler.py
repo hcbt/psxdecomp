@@ -1,7 +1,22 @@
 """Matching-compiler defaults.
 
 Proven on one leaf. Do not treat these as game-wide until more leaves match.
+
+Project data (src, game, build) lives in DEVENV_ROOT so this toolkit can be
+imported into another devenv. Tools live next to this file.
 """
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+
+def project_root() -> Path:
+    env = os.environ.get("DEVENV_ROOT")
+    if env:
+        return Path(env)
+    return Path(__file__).resolve().parents[1]
 
 CC1 = "cc1-2.8.1-psx"
 CPP = "cpp-2.8.1-psx"

@@ -8,9 +8,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from compiler import project_root
 from overlay_table import parse
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project_root()
 GAME = ROOT / "game"
 PROJECT_DIR = ROOT / "ghidra-project"
 PROCESSOR = "PSX:LE:32:default"

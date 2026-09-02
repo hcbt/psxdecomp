@@ -10,9 +10,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from compiler import AS, ASFLAGS, LD, LDFLAGS, OBJCOPY
+from compiler import AS, ASFLAGS, LD, LDFLAGS, OBJCOPY, project_root
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project_root()
 ASM = ROOT / "asm"
 INCLUDE = ROOT / "include"
 BUILD = ROOT / "build"
