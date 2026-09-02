@@ -62,6 +62,47 @@ let
     ghidraPsxLdr
     ghidraMcp
   ]);
+
+  # Import SLUS_008.69 if needed, then open Ghidra + CodeBrowser. GhidraMCP
+  # starts on the project window (http://127.0.0.1:8080/mcp).
+  launch = ''
+    set -euo pipefail
+    root="''${DEVENV_ROOT:-$(pwd)}"
+    exe="$root/game/SLUS_008.69"
+    project_dir="$root/ghidra-project"
+    project_name="Buddies"
+    gpr="$project_dir/$project_name.gpr"
+
+    if [ ! -f "$exe" ]; then
+      echo "missing $exe — put the disc dump in game/" >&2
+      exit 1
+    fi
+
+    mkdir -p "$project_dir"
+
+    if [ "$(uname -s)" = Darwin ]; then
+      pref="$HOME/Library/ghidra/${pkgs.ghidra.distroPrefix}"
+    else
+      pref="$HOME/.config/ghidra/${pkgs.ghidra.distroPrefix}"
+    fi
+    mkdir -p "$pref"
+    if ! grep -q '^USER_AGREEMENT=ACCEPT' "$pref/preferences" 2>/dev/null; then
+      {
+        echo 'USER_AGREEMENT=ACCEPT'
+        echo 'GhidraShowWhatsNew=false'
+        echo 'SHOW_TIPS=false'
+      } >> "$pref/preferences"
+    fi
+
+    if [ ! -f "$gpr" ]; then
+      echo "importing $exe into $project_name..."
+      ghidra-analyzeHeadless "$project_dir" "$project_name" -import "$exe"
+    fi
+
+    echo "Ghidra MCP: http://127.0.0.1:8080/mcp"
+    # 12.1.2 only accepts a .gpr path (gpr:/program is a later Ghidra).
+    exec ghidra "$gpr"
+  '';
 in
 {
   packages = [
@@ -72,10 +113,13 @@ in
 
   env.GHIDRA_INSTALL_DIR = "${ghidra}/lib/ghidra";
 
+  scripts.buddies.exec = launch;
+
   enterTest = ''
     command -v ghidra
     command -v ghidra-analyzeHeadless
     command -v apm || command -v apm-cli
+    command -v buddies
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
       | grep -q ghidra_psx_ldr
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \

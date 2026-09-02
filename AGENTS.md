@@ -6,6 +6,8 @@ All dependencies, services, tests, git hooks, and project tools come from devenv
 
 Do not use host Python, Node, bun, or other host toolchains. Do not add a `.envrc`. Trust the project with `devenv allow`. After changing `devenv.nix` or `devenv.yaml`, confirm with a side effect, not a bare `devenv shell`.
 
+`devenv shell -- buddies` imports `game/SLUS_008.69` if needed, opens it in Ghidra, and starts the Ghidra MCP at `http://127.0.0.1:8080/mcp`.
+
 ## APM
 
 Agent skills and other agent primitives are declared in `apm.yml` and installed with `devenv shell -- apm install` (or `apm-cli` if that is the binary). Commit `apm.yml` (and `apm.lock.yaml` when APM writes one). Do not copy skills into the tree by hand.
