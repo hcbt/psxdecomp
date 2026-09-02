@@ -291,7 +291,6 @@ in
     pkgs.git
     pkgs.apm-cli
     pkgs.ninja
-    pkgs.gnumake
     ghidra
     maspsx
     objdiffCli
@@ -309,11 +308,15 @@ in
     uv.sync.arguments = [ "--frozen" ];
   };
 
+  languages.c.enable = true;
+  languages.cplusplus.enable = true;
+
   scripts.ghidra-open.exec = launch;
-  scripts.splat-split.exec = "bash tools/split.sh";
+  scripts.splat-split.exec = "python3 tools/split.py";
   scripts.ghidra-import-overlays.exec = "python3 tools/ghidra_import_overlays.py";
   scripts.objects.exec = "python3 tools/make_objects.py";
   scripts.objdiff-config.exec = "python3 tools/make_objdiff.py";
+  scripts.compile.exec = "python3 tools/compile.py";
 
   enterTest = ''
     command -v ghidra
@@ -322,6 +325,7 @@ in
     command -v ghidra-open
     command -v splat-split
     command -v ghidra-import-overlays
+    command -v compile
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
       | grep -q ghidra_psx_ldr
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
@@ -330,7 +334,9 @@ in
     test -f "$sla"
     test "$(head -c 3 "$sla")" = sla
 
-    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as cc1-2.8.1-psx cc1-2.7.2-psx; do
+    command -v clang
+    command -v clang++
+    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as cc1-2.8.1-psx cc1-2.7.2-psx clang clang++; do
       path="$(command -v "$tool")"
       case "$path" in
         /nix/store/*|*/.devenv/*|"$DEVENV_STATE"/venv/bin/*) echo "  ok $tool -> $path" ;;

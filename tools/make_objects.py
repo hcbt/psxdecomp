@@ -7,18 +7,17 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from compiler import AS, ASFLAGS
+
 ROOT = Path(__file__).resolve().parents[1]
 ASM = ROOT / "asm"
 OUT = ROOT / "build" / "expected"
-# Host `AS` is often Clang's as on macOS. Always use the mipsel GNU assembler.
-AS = "mipsel-linux-gnu-as"
-# r4000 so `tge` in splat output is accepted (R3000 aspsx emits it anyway).
-ASFLAGS = "-EL -march=r4000 -no-pad-sections".split()
 
 
 def main() -> None:
     if not ASM.is_dir():
-        raise SystemExit("no asm/; run make split")
+        raise SystemExit("no asm/; run splat-split")
     n = 0
     for src in ASM.rglob("*.s"):
         if src.name == "header.s":

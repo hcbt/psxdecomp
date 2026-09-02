@@ -26,6 +26,10 @@ __pycache__/
 # User-supplied Psy-Q SDK (headers + libs)
 /tools/psyq/
 
+# splat yaml + objdiff units (generated from the disc; do not commit)
+/config/
+/objdiff.json
+
 # splat / matching build products
 /asm/
 /assets/

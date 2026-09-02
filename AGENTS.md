@@ -8,9 +8,9 @@ Do not use host Python, Node, bun, or other host toolchains. Do not add a `.envr
 
 `devenv shell -- ghidra-open` imports the disc EXE from `game/` if needed (SYSTEM.CNF `BOOT=`, else the first `PS-X EXE`), opens it in Ghidra, and starts the Ghidra MCP at `http://127.0.0.1:8080/mcp`.
 
-`devenv shell -- splat-split` writes splat yamls from the EXE header + `OVERLAY.DAT` and splits into `asm/`. `devenv shell -- ghidra-import-overlays` imports each overlay BIN at its load address. `devenv shell -- objects` then `objdiff-config` assemble expected objects and write `objdiff.json`. Compile flags live in `config/compiler.mk` (unproven until a leaf matches). Psy-Q headers/libs belong in gitignored `tools/psyq/`.
+`devenv shell -- splat-split` writes splat yamls from the EXE header + `OVERLAY.DAT` (into gitignored `config/`) and splits into `asm/`. `devenv shell -- ghidra-import-overlays` imports each overlay BIN at its load address. `devenv shell -- objects` then `objdiff-config` assemble expected objects and write `objdiff.json`. `devenv shell -- compile` runs old cc1 + maspsx on `src/**/*.c`. Flags are in `tools/compiler.py` (unproven until a leaf matches). Psy-Q is gitignored `tools/psyq/`.
 
-Python is devenv `languages.python` with uv (`uv.sync` from `pyproject.toml` / `uv.lock`). splat comes from that venv. Native matching tools (maspsx, old gcc 2.7.2/2.8.1-psx, mipsel binutils, objdiff-cli, ninja) are devenv packages. Do not use host Python. Psy-Q headers/libs belong in gitignored `tools/psyq/`.
+Python is devenv `languages.python` with uv. Host C/C++ is devenv `languages.c` / `languages.cplusplus` (clang). Matching code still uses `cc1-*-psx`, not host clang. splat comes from the uv venv. Native matching tools (maspsx, old gcc, mipsel binutils, objdiff-cli, ninja) are devenv packages. Do not use host Python, cc, or as.
 
 ## APM
 
