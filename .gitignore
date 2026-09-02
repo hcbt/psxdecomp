@@ -11,3 +11,6 @@ devenv.local.yaml
 
 # User-supplied disc dump
 /game/
+
+# APM package cache
+apm_modules/
