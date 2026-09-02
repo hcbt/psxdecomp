@@ -220,20 +220,13 @@ let
     doCheck = false;
   };
 
-  # Import SLUS_008.69 if needed, then open Ghidra + CodeBrowser. GhidraMCP
-  # starts on the project window (http://127.0.0.1:8080/mcp).
+  # Import the disc EXE if needed, then open Ghidra. GhidraMCP listens on
+  # http://127.0.0.1:8080/mcp once the project window is up.
   launch = ''
     set -euo pipefail
     root="''${DEVENV_ROOT:-$(pwd)}"
-    exe="$root/game/SLUS_008.69"
+    game_dir="$root/game"
     project_dir="$root/ghidra-project"
-    project_name="Buddies"
-    gpr="$project_dir/$project_name.gpr"
-
-    if [ ! -f "$exe" ]; then
-      echo "missing $exe — put the disc dump in game/" >&2
-      exit 1
-    fi
 
     mkdir -p "$project_dir"
 
@@ -251,7 +244,39 @@ let
       } >> "$pref/preferences"
     fi
 
-    if [ ! -f "$gpr" ]; then
+    gpr=""
+    for candidate in "$project_dir"/*.gpr; do
+      if [ -f "$candidate" ]; then
+        gpr="$candidate"
+        break
+      fi
+    done
+
+    if [ -z "$gpr" ]; then
+      exe=""
+      if [ -f "$game_dir/SYSTEM.CNF" ]; then
+        boot=$(grep -E '^BOOT=' "$game_dir/SYSTEM.CNF" | head -1 \
+          | sed 's/^[Bb][Oo][Oo][Tt]=//;s/\\/\//g;s/;.*//;s|.*/||' \
+          | tr -d '\r')
+        if [ -n "$boot" ] && [ -f "$game_dir/$boot" ]; then
+          exe="$game_dir/$boot"
+        fi
+      fi
+      if [ -z "$exe" ]; then
+        for f in "$game_dir"/*; do
+          [ -f "$f" ] || continue
+          if [ "$(head -c 8 "$f")" = "PS-X EXE" ]; then
+            exe="$f"
+            break
+          fi
+        done
+      fi
+      if [ -z "$exe" ]; then
+        echo "no PS-X EXE in $game_dir (SYSTEM.CNF BOOT= or a file starting PS-X EXE)" >&2
+        exit 1
+      fi
+      project_name=$(basename "$exe")
+      gpr="$project_dir/$project_name.gpr"
       echo "importing $exe into $project_name..."
       ghidra-analyzeHeadless "$project_dir" "$project_name" -import "$exe"
     fi
@@ -284,13 +309,13 @@ in
     uv.sync.arguments = [ "--frozen" ];
   };
 
-  scripts.buddies.exec = launch;
+  scripts.ghidra-open.exec = launch;
 
   enterTest = ''
     command -v ghidra
     command -v ghidra-analyzeHeadless
     command -v apm || command -v apm-cli
-    command -v buddies
+    command -v ghidra-open
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \
       | grep -q ghidra_psx_ldr
     find "$GHIDRA_INSTALL_DIR/Ghidra/Extensions" -name extension.properties -print \

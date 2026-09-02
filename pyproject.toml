@@ -1,7 +1,7 @@
 [project]
-name = "buddies"
+name = "psx-decomp"
 version = "0.0.0"
-description = "Team Buddies PSX matching decompilation"
+description = "PS1 matching decompilation"
 requires-python = ">=3.11"
 dependencies = [
     "splat64[mips]>=0.50.0,<1.0.0",

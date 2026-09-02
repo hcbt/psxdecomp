@@ -1,6 +1,6 @@
-name: buddies
+name: psx-decomp
 version: 1.0.0
-description: Ghidra MCP for Team Buddies reverse engineering
+description: Ghidra MCP for PS1 matching decompilation
 author: hcbt
 targets:
 - copilot
