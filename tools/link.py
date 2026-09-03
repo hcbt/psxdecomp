@@ -112,7 +112,12 @@ def link_one(script: Path) -> dict:
     build_for_ld(script)
     elf = BUILD / f"{stem}.elf"
     extra = []
-    for name in ("undefined_syms_auto.txt", "undefined_funcs_auto.txt"):
+    for name in (
+        f"undefined_syms_auto_{stem}.txt",
+        f"undefined_funcs_auto_{stem}.txt",
+        "undefined_syms_auto.txt",
+        "undefined_funcs_auto.txt",
+    ):
         path = CONFIG / name
         if path.is_file() and path.stat().st_size:
             extra += ["-T", str(path)]

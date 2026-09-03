@@ -143,8 +143,8 @@ options:
     - config/symbol_addrs.txt
   reloc_addrs_path:
     - config/reloc_addrs.txt
-  undefined_funcs_auto_path: config/undefined_funcs_auto.txt
-  undefined_syms_auto_path: config/undefined_syms_auto.txt
+  undefined_funcs_auto_path: config/undefined_funcs_auto_{basename}.txt
+  undefined_syms_auto_path: config/undefined_syms_auto_{basename}.txt
   subalign: 4
   string_encoding: ASCII
   data_string_encoding: ASCII

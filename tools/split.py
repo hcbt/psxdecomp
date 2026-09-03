@@ -118,12 +118,26 @@ def splat_one(yaml: Path) -> None:
     splat_split([yaml], modes=None, verbose=False, use_cache=False)
 
 
+def clear_splat_tus() -> None:
+    """splat will not rewrite existing C; drop INCLUDE_ASM stubs so they match this split."""
+    if not SRC.is_dir():
+        return
+    for path in SRC.rglob("*.c"):
+        try:
+            text = path.read_text(errors="replace")
+        except OSError:
+            continue
+        if "INCLUDE_ASM(" in text or "INCLUDE_RODATA(" in text:
+            path.unlink()
+
+
 def main() -> None:
     ensure_common_h()
     gen_splat.main()
     asm = ROOT / "asm"
     if asm.is_dir():
         shutil.rmtree(asm)
+    clear_splat_tus()
     yamls = sorted(p for p in CONFIG.glob("*.yaml") if p.is_file())
     if not yamls:
         raise SystemExit(f"no splat yamls in {CONFIG}")
