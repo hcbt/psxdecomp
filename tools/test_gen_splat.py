@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from fix_asm_labels import fix_text
 from gen_splat import find_text_range, format_subsegments
 
 
@@ -35,5 +36,20 @@ def test_find_text_range() -> None:
     print("ok", yaml)
 
 
+def test_fix_missing_branch_label() -> None:
+    src = (
+        "    /* E20 800C2B6C 02004005 */  bltz       $t2, .L800C2B78\n"
+        "    /* E24 800C2B70 0060023C */   lui       $v0, (0x60000000 >> 16)\n"
+        "    /* E28 800C2B74 0062023C */  lui        $v0, (0x62000000 >> 16)\n"
+        "    /* E2C 800C2B78 2510C201 */  or         $v0, $t6, $v0\n"
+    )
+    out = fix_text(src)
+    assert ".L800C2B78:" in out
+    assert out.index(".L800C2B78:") < out.index("800C2B78 2510C201")
+    assert fix_text(out) == out
+    print("ok labels")
+
+
 if __name__ == "__main__":
     test_find_text_range()
+    test_fix_missing_branch_label()

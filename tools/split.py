@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from compiler import project_root
 from splat_functions import normalize_symbol
+import fix_asm_labels
 import gen_splat
 
 ROOT = project_root()
@@ -144,6 +145,9 @@ def main() -> None:
     self = Path(__file__).resolve()
     for yaml in yamls:
         subprocess.run([sys.executable, str(self), "--splat", str(yaml)], check=True)
+    n = fix_asm_labels.fix_tree()
+    if n:
+        print(f"patched .L labels in {n} asm files")
     patch_generated_c()
 
 

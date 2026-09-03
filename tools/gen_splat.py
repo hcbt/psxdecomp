@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Write splat yamls for the boot EXE and every overlay that exists on disc.
 
-The boot EXE (and each overlay when a .text range is found) is split into
-.rodata / c / .data siblings of one TU so splat emits INCLUDE_ASM stubs.
-.bss is only emitted when the PS-X EXE header's b_size is non-zero; trailing
-zeros in the file stay .data so a link sha1 still matches the dump.
+Every binary (PS-X EXE and overlay BINs) is split into .rodata / c / .data
+siblings of one TU when a PSYQ .text range is found, so splat emits INCLUDE_ASM
+stubs. .bss is only emitted when the PS-X EXE header's b_size is non-zero;
+trailing zeros in the file stay .data so a link sha1 still matches the dump.
 """
 
 from __future__ import annotations
@@ -187,6 +187,7 @@ def write_exe(exe: Path) -> Path:
 def write_overlay(ov, ram_id: str | None) -> Path:
     stem = ov.path.stem.lower()
     extra = f"    exclusive_ram_id: {ram_id}\n" if ram_id else ""
+    data = ov.path.read_bytes()
     yaml = splat_common(ov.name, ov.path, stem, 0)
     yaml += f"""segments:
   - name: {stem}
@@ -195,8 +196,7 @@ def write_overlay(ov, ram_id: str | None) -> Path:
     vram: 0x{ov.load:08X}
     align: 4
 {extra}    subsegments:
-      - [0x0, asm, {stem}]
-  - [{_hex(ov.path.stat().st_size)}]
+{format_subsegments(0, data, stem, text_type="c")}  - [{_hex(len(data))}]
 """
     path = CONFIG / f"{stem}.yaml"
     path.write_text(yaml)
