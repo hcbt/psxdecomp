@@ -132,7 +132,7 @@ options:
   find_file_boundaries: True
   o_as_suffix: True
   use_legacy_include_asm: False
-  include_asm_macro_style: maspsx_hack
+  include_asm_macro_style: default
   create_c_files: True
   migrate_rodata_to_functions: False
   ld_align_section_vram_end: False

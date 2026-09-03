@@ -32,6 +32,26 @@ def sha1(data: bytes) -> str:
     return hashlib.sha1(data).hexdigest()
 
 
+def defsyms_from_symbol_addrs() -> list[str]:
+    """`--defsym` for symbol_addrs marked absolute:True (outside every splat segment)."""
+    path = CONFIG / "symbol_addrs.txt"
+    extra: list[str] = []
+    if not path.is_file():
+        return extra
+    for line in path.read_text().splitlines():
+        comment = ""
+        if "//" in line:
+            line, comment = line.split("//", 1)
+        if "absolute:True" not in comment.replace(" ", ""):
+            continue
+        if "=" not in line:
+            continue
+        name, rhs = line.split("=", 1)
+        addr = rhs.split(";")[0].strip()
+        extra += ["--defsym", f"{name.strip()}={addr}"]
+    return extra
+
+
 def yaml_target(stem: str) -> Path | None:
     path = CONFIG / f"{stem}.yaml"
     if not path.is_file():
@@ -111,7 +131,8 @@ def link_one(script: Path) -> dict:
     stem = script.stem
     build_for_ld(script)
     elf = BUILD / f"{stem}.elf"
-    extra = []
+    extra: list[str] = []
+    extra += defsyms_from_symbol_addrs()
     for name in (
         f"undefined_syms_auto_{stem}.txt",
         f"undefined_funcs_auto_{stem}.txt",
