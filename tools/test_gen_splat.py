@@ -28,7 +28,7 @@ def test_find_text_range() -> None:
     start, end = found
     assert start == len(rodata), (hex(start), hex(len(rodata)))
     assert end == len(rodata) + len(stubs) + len(fn1) + len(pad), (hex(end), len(payload))
-    yaml = format_subsegments(0x800, payload, "main")
+    yaml = format_subsegments(0x800, payload, "main", text_type="c")
     assert "rodata, rodata" in yaml
     assert ", c, main" in yaml
     assert "data, data" in yaml

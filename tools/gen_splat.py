@@ -96,15 +96,17 @@ def find_text_range(payload: bytes) -> tuple[int, int] | None:
     return text_start, text_end
 
 
-def format_subsegments(file_start: int, payload: bytes, tu: str) -> str:
+def format_subsegments(
+    file_start: int, payload: bytes, tu: str, *, text_type: str = "c"
+) -> str:
     found = find_text_range(payload)
     if found is None:
-        return f"      - [{_hex(file_start)}, c, {tu}]\n"
+        return f"      - [{_hex(file_start)}, {text_type}, {tu}]\n"
     text_off, text_end = found
     lines: list[str] = []
     if text_off > 0:
         lines.append(f"      - [{_hex(file_start)}, rodata, rodata]")
-    lines.append(f"      - [{_hex(file_start + text_off)}, c, {tu}]")
+    lines.append(f"      - [{_hex(file_start + text_off)}, {text_type}, {tu}]")
     if text_end < len(payload):
         lines.append(f"      - [{_hex(file_start + text_end)}, data, data]")
     return "".join(line + "\n" for line in lines)
@@ -171,7 +173,7 @@ def write_exe(exe: Path) -> Path:
     vram: 0x{dest:08X}
     align: 4
     subsegments:
-{format_subsegments(0x800, payload, "main")}"""
+{format_subsegments(0x800, payload, "main", text_type="c")}"""
     if b_size:
         bss_vram = b_addr if b_addr else dest + text_size
         yaml += f"""      - {{ start: {_hex(end)}, type: bss, vram: 0x{bss_vram:08X}, name: bss }}
@@ -194,7 +196,7 @@ def write_overlay(ov, ram_id: str | None) -> Path:
     vram: 0x{ov.load:08X}
     align: 4
 {extra}    subsegments:
-{format_subsegments(0, data, stem)}  - [{_hex(ov.path.stat().st_size)}]
+{format_subsegments(0, data, stem, text_type="asm")}  - [{_hex(ov.path.stat().st_size)}]
 """
     path = CONFIG / f"{stem}.yaml"
     path.write_text(yaml)
