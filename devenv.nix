@@ -312,6 +312,7 @@ in
   languages.cplusplus.enable = true;
 
   scripts.ghidra-open.exec = launch;
+  scripts.ghidra-mcp.exec = ''PYTHONPATH=${./tools}''${PYTHONPATH:+:$PYTHONPATH} python3 ${./tools}/ghidra_mcp.py "$@"'';
   scripts.splat-split.exec = ''PYTHONPATH=${./tools}''${PYTHONPATH:+:$PYTHONPATH} python3 ${./tools}/split.py "$@"'';
   scripts.ghidra-import-overlays.exec = ''PYTHONPATH=${./tools}''${PYTHONPATH:+:$PYTHONPATH} python3 ${./tools}/ghidra_import_overlays.py "$@"'';
   scripts.objects.exec = ''PYTHONPATH=${./tools}''${PYTHONPATH:+:$PYTHONPATH} python3 ${./tools}/make_objects.py "$@"'';
@@ -325,6 +326,7 @@ in
     command -v ghidra-analyzeHeadless
     command -v apm || command -v apm-cli
     command -v ghidra-open
+    command -v ghidra-mcp
     command -v splat-split
     command -v ghidra-import-overlays
     command -v compile
@@ -340,7 +342,7 @@ in
 
     command -v clang
     command -v clang++
-    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as mipsel-linux-gnu-ld cc1-2.8.1-psx cc1-2.7.2-psx clang clang++; do
+    for tool in python3 uv splat maspsx ninja objdiff-cli mipsel-linux-gnu-as mipsel-linux-gnu-ld cc1-2.8.1-psx cc1-2.7.2-psx clang clang++ mcp-proxy; do
       path="$(command -v "$tool")"
       case "$path" in
         /nix/store/*|*/.devenv/*|"$DEVENV_STATE"/venv/bin/*) echo "  ok $tool -> $path" ;;
@@ -356,5 +358,6 @@ in
     cc1_out="$(cc1-2.8.1-psx -version </dev/null 2>&1 || true)"
     echo "$cc1_out" | grep -q "GNU C version 2.8.1"
     python3 ${./tools}/test_make_objdiff.py
+    python3 ${./tools}/test_ghidra_mcp.py
   '';
 }
