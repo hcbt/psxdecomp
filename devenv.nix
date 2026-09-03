@@ -70,13 +70,21 @@ let
     hash = "sha256-B6p/V7zha3hurGjcOfAmbCcmUECj+uB6+O8rMmOEmUY=";
   };
 
+  # Upstream uses stdin when not a tty, then warns and opens the file.
+  # We always pass a .s path and close stdin so agent pipes cannot hang.
+  maspsxPatched = pkgs.runCommand "maspsx-src" { src = maspsxSrc; } ''
+    cp -r "$src" "$out"
+    chmod -R u+w "$out"
+    substituteInPlace "$out/maspsx.py" --replace-fail \
+      'read_from_file = sys.stdin.isatty()' \
+      'read_from_file = True'
+  '';
+
   maspsx = pkgs.writeShellApplication {
     name = "maspsx";
     runtimeInputs = [ pkgs.python3 ];
     text = ''
-      # Agent stdio is a pipe that never EOFs; maspsx readlines() stdin when
-      # not a tty. Close it so a file argument is used instead of hanging.
-      exec python3 ${maspsxSrc}/maspsx.py "$@" </dev/null
+      exec python3 ${maspsxPatched}/maspsx.py "$@" </dev/null
     '';
   };
 

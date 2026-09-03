@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
@@ -70,7 +69,22 @@ def test_cc1_with_file() -> None:
     print("ok cc1_with_file")
 
 
+def test_maspsx_file_no_stdin_warning() -> None:
+    maspsx = shutil.which("maspsx")
+    if maspsx is None:
+        raise SystemExit("maspsx not on PATH")
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "t.s"
+        src.write_text("nop\n")
+        proc = run_with_never_eof_pipe([maspsx, str(src)])
+        err = proc.stderr.decode(errors="replace")
+        assert "no input from stdin" not in err, err
+        assert proc.returncode == 0, err
+    print("ok maspsx_file_no_stdin_warning")
+
+
 if __name__ == "__main__":
     test_cpp_with_file()
     test_cpp_glued_dash_p_fails_fast()
     test_cc1_with_file()
+    test_maspsx_file_no_stdin_warning()
