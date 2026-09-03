@@ -42,10 +42,16 @@ def compile_c(src: Path, src_root: Path = SRC, dest: Path | None = None) -> Path
     if inc is not None:
         cpp_cmd += ["-I", str(inc)]
     cpp_cmd.append(str(src))
-    preprocessed = subprocess.run(cpp_cmd, check=True, capture_output=True)
+    preprocessed = subprocess.run(
+        cpp_cmd, check=True, capture_output=True, stdin=subprocess.DEVNULL
+    )
     i_file = dest.with_suffix(".i")
     i_file.write_bytes(preprocessed.stdout)
-    subprocess.run([CC1, "-quiet", *CFLAGS, "-o", str(asm), str(i_file)], check=True)
+    subprocess.run(
+        [CC1, "-quiet", *CFLAGS, "-o", str(asm), str(i_file)],
+        check=True,
+        stdin=subprocess.DEVNULL,
+    )
     subprocess.run(
         [
             MASPSX,
@@ -62,7 +68,6 @@ def compile_c(src: Path, src_root: Path = SRC, dest: Path | None = None) -> Path
             str(asm),
         ],
         check=True,
-        # maspsx readlines() stdin when not a tty; an agent pipe never EOFs.
         stdin=subprocess.DEVNULL,
     )
     try:

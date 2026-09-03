@@ -74,7 +74,9 @@ let
     name = "maspsx";
     runtimeInputs = [ pkgs.python3 ];
     text = ''
-      exec python3 ${maspsxSrc}/maspsx.py "$@"
+      # Agent stdio is a pipe that never EOFs; maspsx readlines() stdin when
+      # not a tty. Close it so a file argument is used instead of hanging.
+      exec python3 ${maspsxSrc}/maspsx.py "$@" </dev/null
     '';
   };
 
@@ -102,7 +104,14 @@ let
         chmod +x "$out/lib/gcc-${version}-psx"/* || true
         for b in cc1 cpp gcc cc1plus g++; do
           if [ -e "$out/lib/gcc-${version}-psx/$b" ]; then
-            ln -s "$out/lib/gcc-${version}-psx/$b" "$out/bin/$b-${version}-psx"
+            # These tools read stdin when they have no input file. Agent
+            # pipes never EOF, so a bad argv (e.g. -Ptest.c) hung for
+            # minutes. Fail instead.
+            cat > "$out/bin/$b-${version}-psx" <<EOF
+#! /bin/sh
+exec "$out/lib/gcc-${version}-psx/$b" "\$@" </dev/null
+EOF
+            chmod +x "$out/bin/$b-${version}-psx"
           fi
         done
         runHook postInstall
@@ -359,5 +368,6 @@ in
     echo "$cc1_out" | grep -q "GNU C version 2.8.1"
     python3 ${./tools}/test_make_objdiff.py
     python3 ${./tools}/test_ghidra_mcp.py
+    python3 ${./tools}/test_compiler_stdin.py
   '';
 }
