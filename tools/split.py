@@ -145,9 +145,9 @@ def main() -> None:
     self = Path(__file__).resolve()
     for yaml in yamls:
         subprocess.run([sys.executable, str(self), "--splat", str(yaml)], check=True)
-    n = fix_asm_labels.fix_tree()
+    n = fix_asm_labels.fix_all()
     if n:
-        print(f"patched .L labels in {n} asm files")
+        print(f"patched splat asm in {n} files")
     patch_generated_c()
 
 

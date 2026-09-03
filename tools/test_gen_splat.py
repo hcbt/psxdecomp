@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from fix_asm_labels import fix_text
+from fix_asm_labels import fix_text, rewrite_data_func_refs
 from gen_splat import find_text_range, format_subsegments
 
 
@@ -50,6 +50,16 @@ def test_fix_missing_branch_label() -> None:
     print("ok labels")
 
 
+def test_rewrite_data_func_refs() -> None:
+    src = "    .word D_800C264C + 0x48\n"
+    out = rewrite_data_func_refs(src, {"800C264C": "func_800C264C"}, set())
+    assert "func_800C264C + 0x48" in out
+    kept = rewrite_data_func_refs(src, {"800C264C": "func_800C264C"}, {"800C264C"})
+    assert kept == src
+    print("ok d_to_func")
+
+
 if __name__ == "__main__":
     test_find_text_range()
     test_fix_missing_branch_label()
+    test_rewrite_data_func_refs()

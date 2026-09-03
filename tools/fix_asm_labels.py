@@ -23,6 +23,11 @@ ASM = ROOT / "asm"
 LABEL_REF_RE = re.compile(r"(?<![\w.])(\.L[0-9A-Fa-f]{8})\b")
 LABEL_DEF_RE = re.compile(r"^\s*(\.L[0-9A-Fa-f]{8})\s*:")
 VRAM_RE = re.compile(r"/\*\s*[0-9A-Fa-f]+\s+([0-9A-Fa-f]{8})\b")
+GLABEL_FUNC_RE = re.compile(
+    r"^(?:glabel|alabel)\s+((?:fun|func|FUN|FUNC)_[0-9A-Fa-f]{8})\s*$"
+)
+D_REF_RE = re.compile(r"\bD_([0-9A-Fa-f]{8})\b")
+DLABEL_D_RE = re.compile(r"^\s*dlabel\s+D_([0-9A-Fa-f]{8})\s*$")
 
 
 def _norm(name: str) -> str:
@@ -73,13 +78,60 @@ def fix_text(text: str) -> str:
     return "".join(lines)
 
 
+def func_names(asm: Path) -> dict[str, str]:
+    """VRAM hex -> glabel name for functions (func_800C264C, fun_8001a968)."""
+    found: dict[str, str] = {}
+    for path in asm.rglob("*.s"):
+        for line in path.read_text(errors="replace").splitlines():
+            match = GLABEL_FUNC_RE.match(line)
+            if match:
+                name = match.group(1)
+                found[name.split("_")[-1].upper()] = name
+    return found
+
+
+def dlabel_vrams(asm: Path) -> set[str]:
+    found: set[str] = set()
+    for path in asm.rglob("*.s"):
+        for line in path.read_text(errors="replace").splitlines():
+            match = DLABEL_D_RE.match(line)
+            if match:
+                found.add(match.group(1).upper())
+    return found
+
+
+def rewrite_data_func_refs(text: str, funcs: dict[str, str], skip: set[str]) -> str:
+    """Rodata may say D_800C264C + 0x48 when the symbol is glabel func_800C264C."""
+
+    def repl(match: re.Match[str]) -> str:
+        vram = match.group(1).upper()
+        if vram in skip:
+            return match.group(0)
+        return funcs.get(vram, match.group(0))
+
+    return D_REF_RE.sub(repl, text)
+
+
+def fix_all(asm: Path = ASM) -> int:
+    """Patch each binary's asm/ independently so shared-RAM overlays do not mix names."""
+    if not asm.is_dir():
+        return 0
+    subs = sorted(p for p in asm.iterdir() if p.is_dir())
+    if not subs:
+        return fix_tree(asm)
+    return sum(fix_tree(sub) for sub in subs)
+
+
 def fix_tree(asm: Path = ASM) -> int:
     n = 0
     if not asm.is_dir():
         return 0
+    funcs = func_names(asm)
+    skip = dlabel_vrams(asm)
     for path in sorted(asm.rglob("*.s")):
         original = path.read_text(errors="replace")
         updated = fix_text(original)
+        updated = rewrite_data_func_refs(updated, funcs, skip)
         if updated != original:
             path.write_text(updated)
             n += 1
@@ -87,7 +139,7 @@ def fix_tree(asm: Path = ASM) -> int:
 
 
 def main() -> None:
-    n = fix_tree()
+    n = fix_all()
     print(f"patched {n} asm files")
 
 
