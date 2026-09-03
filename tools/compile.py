@@ -14,6 +14,7 @@ from compiler import ASPSX_VER, AS, ASFLAGS, CC1, CFLAGS, CPP, MASPSX, project_r
 ROOT = project_root()
 SRC = ROOT / "src"
 OUT = ROOT / "build" / "src"
+INCLUDE = ROOT / "include"
 TOOLKIT_DIR = Path(__file__).resolve().parent
 
 
@@ -27,12 +28,16 @@ def psyq_include() -> Path | None:
     return None
 
 
-def compile_c(src: Path, src_root: Path = SRC) -> Path:
-    rel = src.relative_to(src_root) if src.is_relative_to(src_root) else Path(src.name)
-    dest = OUT / rel.with_suffix(".o")
+def compile_c(src: Path, src_root: Path = SRC, dest: Path | None = None) -> Path:
+    src = src.resolve()
+    if dest is None:
+        rel = src.relative_to(src_root) if src.is_relative_to(src_root) else Path(src.name)
+        dest = OUT / rel.with_suffix(".o")
+    else:
+        dest = dest.resolve()
     dest.parent.mkdir(parents=True, exist_ok=True)
     asm = dest.with_suffix(".s")
-    cpp_cmd = [CPP, "-P"]
+    cpp_cmd = [CPP, "-P", "-I", str(INCLUDE), "-I", str(src.parent)]
     inc = psyq_include()
     if inc is not None:
         cpp_cmd += ["-I", str(inc)]
@@ -49,14 +54,19 @@ def compile_c(src: Path, src_root: Path = SRC) -> Path:
             f"--gnu-as-path={AS}",
             *ASFLAGS,
             "-I",
-            str(ROOT / "include"),
+            str(INCLUDE),
+            "-I",
+            str(ROOT),
             "-o",
             str(dest),
             str(asm),
         ],
         check=True,
     )
-    print(dest.relative_to(ROOT))
+    try:
+        print(dest.relative_to(ROOT))
+    except ValueError:
+        print(dest)
     return dest
 
 

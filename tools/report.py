@@ -22,10 +22,21 @@ SRC_FUNCS = ROOT / "build" / "src" / "funcs"
 REPORT = ROOT / "report.json"
 
 
+def is_splat_tu(path: Path) -> bool:
+    """splat TUs pull unmatched functions via INCLUDE_ASM; objdiff wants per-fn .c."""
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return False
+    return "INCLUDE_ASM(" in text
+
+
 def compile_src(src_root: Path) -> list[Path]:
     files = sorted(src_root.rglob("*.c")) if src_root.is_dir() else []
     out = []
     for src in files:
+        if is_splat_tu(src):
+            continue
         out.append(compile_mod.compile_c(src, src_root=src_root))
     return out
 
@@ -171,7 +182,7 @@ def main() -> None:
     if not args.skip_link:
         import link as link_mod
 
-        print("link sha1 (splat objects, not C):")
+        print("link sha1 (C TUs with INCLUDE_ASM, else splat asm):")
         link_mod.main()
 
 

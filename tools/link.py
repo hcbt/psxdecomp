@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Link splat objects with the generated ld scripts and sha1 against originals."""
+"""Link splat objects with the generated ld scripts and sha1 against originals.
+
+Objects listed under a `/src/` path are compiled from matching C (INCLUDE_ASM
+stubs plus any per-function .c that split.py inlined). Everything else is
+assembled from splat .s. The C object wins when both exist.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from compiler import AS, ASFLAGS, LD, LDFLAGS, OBJCOPY, project_root
+import compile as compile_mod
 
 ROOT = project_root()
 ASM = ROOT / "asm"
@@ -37,29 +43,56 @@ def yaml_target(stem: str) -> Path | None:
     return None
 
 
-def assemble_for_ld(script: Path) -> list[Path]:
+def source_for_object(dest: Path) -> Path | None:
+    """Map a splat ld-script object back to a .c (preferred) or .s."""
+    dest = dest.resolve()
+    try:
+        rel = dest.relative_to(BUILD)
+    except ValueError:
+        rel = Path(*dest.parts)
+    parts = rel.parts
+    if "src" in parts:
+        c_path = ROOT / Path(*parts[parts.index("src") :]).with_suffix(".c")
+        if c_path.is_file():
+            return c_path
+    if "asm" in parts:
+        s_path = ROOT / Path(*parts[parts.index("asm") :]).with_suffix(".s")
+        if s_path.is_file():
+            return s_path
+    if dest.name == "header.o":
+        candidates = list(ASM.rglob("header.s"))
+        if candidates:
+            return candidates[0]
+    return None
+
+
+def assemble(src: Path, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [AS, *ASFLAGS, "-I", str(INCLUDE), "-I", str(ROOT), "-o", str(dest), str(src)],
+        check=True,
+        capture_output=True,
+    )
+
+
+def build_for_ld(script: Path) -> list[Path]:
     text = script.read_text()
-    objs = []
+    objs: list[Path] = []
+    seen: set[str] = set()
     for match in OBJ_IN_LD.finditer(text):
-        dest = ROOT / match.group(1)
-        if dest.name == "header.o":
-            src = ASM / dest.parent.name / "header.s"
-            if not src.is_file():
-                # splat: asm/<basename>/header.s
-                candidates = list(ASM.rglob("header.s"))
-                src = candidates[0] if candidates else src
-        else:
-            # build/<bin>/asm/<bin>/main.o -> asm/<bin>/main.s
-            rel_asm = Path(*dest.parts[dest.parts.index("asm") :])
-            src = ROOT / rel_asm.with_suffix(".s")
-        if not src.is_file():
-            raise SystemExit(f"no splat asm for {dest}: expected {src}")
+        rel = match.group(1)
+        if rel in seen:
+            continue
+        seen.add(rel)
+        dest = ROOT / rel
+        src = source_for_object(dest)
+        if src is None:
+            raise SystemExit(f"no source for {dest.relative_to(ROOT)}")
         dest.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(
-            [AS, *ASFLAGS, "-I", str(INCLUDE), "-o", str(dest), str(src)],
-            check=True,
-            capture_output=True,
-        )
+        if src.suffix == ".c":
+            compile_mod.compile_c(src, dest=dest)
+        else:
+            assemble(src, dest)
         objs.append(dest)
     return objs
 
@@ -76,7 +109,7 @@ def original_payload(target: Path) -> bytes:
 
 def link_one(script: Path) -> dict:
     stem = script.stem
-    assemble_for_ld(script)
+    build_for_ld(script)
     elf = BUILD / f"{stem}.elf"
     extra = []
     for name in ("undefined_syms_auto.txt", "undefined_funcs_auto.txt"):
@@ -105,6 +138,8 @@ def link_one(script: Path) -> dict:
     result["match"] = match
     result["sha1_original"] = sha1(want)
     result["sha1_linked"] = sha1(got[: len(want)])
+    if not match:
+        result["reason"] = "sha1"
     return result
 
 
@@ -120,6 +155,10 @@ def main() -> int:
             failed += 1
             err = (exc.stderr or b"").decode(errors="replace")[-400:]
             print(f"{script.stem}: link failed\n{err}")
+            continue
+        except SystemExit as exc:
+            failed += 1
+            print(f"{script.stem}: {exc}")
             continue
         status = "OK" if info.get("match") else f"MISMATCH ({info.get('reason', 'sha1')})"
         print(f"{info['name']}: {status}")
