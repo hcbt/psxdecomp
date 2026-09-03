@@ -187,7 +187,6 @@ def write_exe(exe: Path) -> Path:
 def write_overlay(ov, ram_id: str | None) -> Path:
     stem = ov.path.stem.lower()
     extra = f"    exclusive_ram_id: {ram_id}\n" if ram_id else ""
-    data = ov.path.read_bytes()
     yaml = splat_common(ov.name, ov.path, stem, 0)
     yaml += f"""segments:
   - name: {stem}
@@ -196,7 +195,8 @@ def write_overlay(ov, ram_id: str | None) -> Path:
     vram: 0x{ov.load:08X}
     align: 4
 {extra}    subsegments:
-{format_subsegments(0, data, stem, text_type="asm")}  - [{_hex(ov.path.stat().st_size)}]
+      - [0x0, asm, {stem}]
+  - [{_hex(ov.path.stat().st_size)}]
 """
     path = CONFIG / f"{stem}.yaml"
     path.write_text(yaml)
