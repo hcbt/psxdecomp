@@ -355,5 +355,6 @@ in
     mipsel-linux-gnu-ld --version >/dev/null
     cc1_out="$(cc1-2.8.1-psx -version </dev/null 2>&1 || true)"
     echo "$cc1_out" | grep -q "GNU C version 2.8.1"
+    python3 ${./tools}/test_make_objdiff.py
   '';
 }
