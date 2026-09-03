@@ -62,6 +62,8 @@ def compile_c(src: Path, src_root: Path = SRC, dest: Path | None = None) -> Path
             str(asm),
         ],
         check=True,
+        # maspsx readlines() stdin when not a tty; an agent pipe never EOFs.
+        stdin=subprocess.DEVNULL,
     )
     try:
         print(dest.relative_to(ROOT))
