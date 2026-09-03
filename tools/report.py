@@ -141,7 +141,7 @@ def main() -> None:
         "-o",
         type=Path,
         default=REPORT,
-        help="objdiff report.json (put this in the decomp repo)",
+        help="objdiff report.json (generated; do not commit)",
     )
     parser.add_argument(
         "--skip-link",
