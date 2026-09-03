@@ -29,6 +29,8 @@ def main() -> None:
         for src in ASM.rglob("*.s"):
             if src.name == "header.s":
                 continue
+            if "nonmatchings" in src.parts or "matchings" in src.parts:
+                continue
             assemble(src, OUT / src.relative_to(ASM).with_suffix(".o"))
             n += 1
     if HANDWRITTEN.is_dir():
