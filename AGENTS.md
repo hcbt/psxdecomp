@@ -6,7 +6,7 @@ All dependencies, services, tests, git hooks, and project tools come from devenv
 
 Do not use host Python, Node, bun, or other host toolchains. Do not add a `.envrc`. Trust the project with `devenv allow`. After changing `devenv.nix` or `devenv.yaml`, confirm with a side effect, not a bare `devenv shell`.
 
-`devenv shell -- ghidra-open` imports the disc EXE from `game/` if needed (SYSTEM.CNF `BOOT=`, else the first `PS-X EXE`) and opens it in Ghidra. `devenv shell -- ghidra-mcp` is the stdio MCP server: it starts `ghidra-open` if `127.0.0.1:8080` is down, waits until `/mcp` answers, then proxies with mcp-proxy. MCP clients spawn `devenv shell -- ghidra-mcp` so handshake waits for the GUI instead of failing.
+`devenv shell -- ghidra-open` imports the disc EXE from `game/` if needed (SYSTEM.CNF `BOOT=`, else the first `PS-X EXE`) and opens it in Ghidra. `devenv shell -- ghidra-mcp` is the stdio MCP server: it starts `ghidra-open` if `127.0.0.1:8080` is down, waits until `/mcp` answers, then proxies with mcp-proxy. If Ghidra is closed later, the same process starts `ghidra-open` again. MCP clients spawn `devenv shell -- ghidra-mcp` so handshake waits for the GUI instead of failing.
 
 This devenv is meant to be imported by a game decomp. Data paths are `DEVENV_ROOT` (the importing project): disc dump in `game/` (gitignored), matching C in `src/`, splat `asm/` committed so CI can match without the dump. Psy-Q 4.7 headers ship in `tools/psyq/include`. A consumer may still put extra SDK files in its own `tools/psyq/`.
 
