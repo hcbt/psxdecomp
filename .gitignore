@@ -15,9 +15,6 @@ devenv.local.yaml
 # Ghidra project (created by `ghidra-open`)
 /ghidra-project/
 
-# APM package cache
-apm_modules/
-
 # uv / Python
 .venv/
 __pycache__/

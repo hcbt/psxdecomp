@@ -14,12 +14,6 @@ This devenv is meant to be imported by a game decomp. Data paths are `DEVENV_ROO
 
 Python is devenv `languages.python` with uv. Host C/C++ is devenv `languages.c` / `languages.cplusplus` (clang). Matching code still uses `cc1-*-psx`, not host clang. splat comes from the uv venv. Native matching tools (maspsx, old gcc, mipsel binutils, objdiff-cli, ninja) are devenv packages. Do not use host Python, cc, or as.
 
-## APM
-
-Agent skills and other agent primitives are declared in `apm.yml` and installed with `devenv shell -- apm install` (or `apm-cli` if that is the binary). Commit `apm.yml` (and `apm.lock.yaml` when APM writes one). Do not copy skills into the tree by hand.
-
-The Ghidra MCP is declared under `dependencies.mcp` as stdio `devenv shell -- ghidra-mcp` (not a raw HTTP URL). `devenv shell -- apm install` deploys that to `.mcp.json` (Claude and other stdio clients) and `.vscode/mcp.json` (Copilot).
-
 ## Git
 
 Default branch is `master`. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).

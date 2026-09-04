@@ -306,7 +306,6 @@ in
 {
   packages = [
     pkgs.git
-    pkgs.apm-cli
     pkgs.ninja
     ghidra
     maspsx
@@ -341,7 +340,6 @@ in
   enterTest = ''
     command -v ghidra
     command -v ghidra-analyzeHeadless
-    command -v apm || command -v apm-cli
     command -v ghidra-open
     command -v ghidra-mcp
     command -v splat-split
