@@ -375,5 +375,6 @@ in
     python3 ${./tools}/test_make_objdiff.py
     python3 ${./tools}/test_ghidra_mcp.py
     python3 ${./tools}/test_compiler_stdin.py
+    python3 ${./tools}/test_listing_wrapper.py
   '';
 }

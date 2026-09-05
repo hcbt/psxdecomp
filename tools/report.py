@@ -22,23 +22,40 @@ SRC_FUNCS = ROOT / "build" / "src" / "funcs"
 REPORT = ROOT / "report.json"
 
 
-def is_splat_tu(path: Path) -> bool:
-    """splat TUs pull unmatched functions via INCLUDE_ASM; objdiff wants per-fn .c."""
-    try:
-        text = path.read_text(errors="replace")
-    except OSError:
-        return False
-    return "INCLUDE_ASM(" in text
-
-
 def compile_src(src_root: Path) -> list[Path]:
     files = sorted(src_root.rglob("*.c")) if src_root.is_dir() else []
     out = []
+    skipped = 0
     for src in files:
-        if is_splat_tu(src):
+        if compile_mod.is_splat_tu(src):
+            continue
+        if compile_mod.listing_wrapper_reason(src):
+            skipped += 1
             continue
         out.append(compile_mod.compile_c(src, src_root=src_root))
+    if skipped:
+        print(f"skipped {skipped} listing wrappers (not counted as matches)")
     return out
+
+
+def unlink_listing_wrapper_objects(src_root: Path) -> None:
+    """Drop leftover .o so a previous wrapper compile cannot stay matched."""
+    if not src_root.is_dir():
+        return
+    for src in src_root.rglob("*.c"):
+        if compile_mod.is_splat_tu(src):
+            continue
+        if compile_mod.listing_wrapper_reason(src) is None:
+            continue
+        try:
+            rel = src.relative_to(src_root)
+        except ValueError:
+            rel = Path(src.name)
+        for dest in (
+            SRC_FUNCS / f"{src.stem}.o",
+            compile_mod.OUT / rel.with_suffix(".o"),
+        ):
+            dest.unlink(missing_ok=True)
 
 
 def map_compiled(objs: list[Path], funcs) -> int:
@@ -157,6 +174,7 @@ def main() -> None:
     print(f"splat functions: {len(funcs)}")
     extract_and_assemble(funcs)
     compiled = compile_src(src_root) if src_root.is_dir() else []
+    unlink_listing_wrapper_objects(src_root)
     mapped = map_compiled(compiled, funcs)
     print(f"compiled {len(compiled)} C files, mapped {mapped} to splat names")
     make_objdiff.main()
