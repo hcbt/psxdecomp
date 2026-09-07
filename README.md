@@ -1,6 +1,7 @@
 # psxdecomp
 
-Generic PlayStation 1 matching-decomp environment: Ghidra, splat, maspsx, old gcc, objdiff.
+Reusable PlayStation 1 matching-decomp toolchain: Meson, Ninja, a native
+`psxdecomp` CLI, Splat, old GCC, maspsx, GNU binutils, objdiff, and Ghidra.
 
 Import it from a game decomp's `devenv.yaml`:
 
@@ -13,14 +14,31 @@ imports:
   - psxdecomp
 ```
 
-The importing project is `DEVENV_ROOT`. Put the disc dump in `game/` (gitignored). Matching C lives in `src/` (per-function files plus splat TUs with `INCLUDE_ASM`). Commit splat `asm/` so CI can run `compile` then `report --skip-link` without `game/`. splat yamls and address lists go in `config/`, with a stub `include/common.h`. Psy-Q 4.7 headers are in `tools/psyq/include`. `splat-split` cuts `.rodata` / `.text` (type `c`) / `.data` on the boot EXE and on overlay BINs when it can find PSYQ stack-frame prologues, writes `INCLUDE_ASM` stubs, fills in splat-omitted `.L` branch labels, and inlines any matching `src/<tu>/<fn>.c`. `link` compiles those TUs and sha1s against the originals.
+The consumer owns `psxdecomp.toml` and `meson.build`. Commit its Splat assembly,
+linker scripts, and generated undefined-symbol files so CI can reconstruct every
+binary without the private disc dump. Meson describes the build graph, Ninja is
+its backend, and `psxdecomp` performs the PS1-specific leaf operations.
 
-`devenv shell -- report` prints matched-code percent and writes gitignored `report.json` plus `objdiff.json`. Do not commit either file. CI uploads `report.json` as a `{version}_report` artifact for decomp.dev.
+The default build compiles changed candidate functions, compares them with
+objdiff, links every executable and overlay, and verifies each result against the
+SHA-1 recorded in `psxdecomp.toml`. Progress reporting is separate and writes
+`_build/report.json` plus `_build/objdiff.json`.
 
-```
+```sh
 devenv allow
+devenv shell -- meson setup _build
+devenv shell -- meson compile -C _build
+devenv shell -- meson compile -C _build progress
 devenv shell -- ghidra-open
-devenv shell -- splat-split
-devenv shell -- compile
-devenv shell -- report
 ```
+
+Regeneration is an explicit, transactional operation that requires the private
+disc in `game/`:
+
+```sh
+devenv shell -- psxdecomp regenerate
+devenv shell -- meson setup --reconfigure _build
+```
+
+The Rust compiler is enabled only in this toolkit repository. Consumers receive
+the packaged CLI and all toolchain binaries through their imported devenv.

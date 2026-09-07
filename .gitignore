@@ -27,7 +27,8 @@ __pycache__/
 /config/
 /objdiff.json
 /report.json
-/src/
+/src/*/
+/target/
 /expected/
 
 # splat / matching build products
